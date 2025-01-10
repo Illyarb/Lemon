@@ -1,4 +1,4 @@
-from expression import Atom
+from expression import Atom, Summation
 class Cursor:
     def __init__(self, x,y):
         self.x = x
@@ -9,6 +9,7 @@ class EditorController:
         self.mode = "normal"
         self.cursor = Cursor(0,0)
         self.lines = [Atom("")]
+# ,Summation("i=0", "2", "i + 2")]
         self.vbuffer = ""
 
     def get_current_line(self):
@@ -17,6 +18,17 @@ class EditorController:
     def new_line(self):
         self.lines.insert(self.cursor.y + 1, Atom(""))
         self.cursor.y += 1
+
+    def delete_line(self):
+        if self.cursor.y == 0:
+            self.lines.pop(0)
+            self.lines.insert(0, Atom(""))
+            return
+
+        self.lines.pop(self.cursor.y)
+        self.cursor.y -= 1
+
+
     def check_vbuffer(self):
         if self.vbuffer.endswith("sum"):
             pass
