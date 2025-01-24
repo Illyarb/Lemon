@@ -1,4 +1,5 @@
-from expression import Atom, Summation
+from expression import Atom, Summation, Matrix
+from tui import *
 class Cursor:
     def __init__(self, x,y):
         self.x = x
@@ -8,16 +9,34 @@ class EditorController:
     def __init__(self):
         self.mode = "normal"
         self.cursor = Cursor(0,0)
-        self.lines = [Atom("")]
+        self.lines = [Atom(""), Summation("i=0", "2", "i + 2"),Atom(""),Atom(""),Atom(""), Matrix(2,2,[["1","2"],["3","4"]])]
+        # self.lines = [Atom("x²"),Summation("i=0", "2", "i + 2")]
 # ,Summation("i=0", "2", "i + 2")]
         self.vbuffer = ""
+        self.command_buffer = ""
+        self.line_heights = []
+        for i in self.lines:
+            self.line_heights.append(i.height)
 
     def get_current_line(self):
         return self.lines[self.cursor.y]
 
+    def render(self):
+        clear_screen()
+        draw_footer(self)
+        height_offset = 0
+        for no, line in enumerate(self.lines):
+            move_cursor(0, no + height_offset)
+            line.render()
+            height_offset += line.height
+
     def new_line(self):
         self.lines.insert(self.cursor.y + 1, Atom(""))
         self.cursor.y += 1
+
+    def type_command_char(self, key):
+        self.command_buffer += key
+
 
     def delete_line(self):
         if self.cursor.y == 0:
@@ -27,7 +46,6 @@ class EditorController:
 
         self.lines.pop(self.cursor.y)
         self.cursor.y -= 1
-
 
     def check_vbuffer(self):
         if self.vbuffer.endswith("sum"):
@@ -40,6 +58,7 @@ class EditorController:
 
     def backspace(self):
         self.get_current_line().backspace()
+
     def go_left(self):
         if self.cursor.x == 0:
             return
@@ -62,3 +81,10 @@ class EditorController:
         if self.cursor.y == len(self.lines) - 1:
             return
         self.cursor.y += 1
+    def quit(self):
+        self.quit = True
+
+    def write_file(self):
+        pass
+    
+

@@ -1,9 +1,11 @@
 from editor_renderer import *
 from editor_controller import EditorController
+from commands import *
 import sys
 import tty
 import termios
 
+vbuffer = ""
 def get_key():
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
@@ -16,12 +18,21 @@ def get_key():
                 key = 'ENTER'
             elif key == '\x1b':
                 key = 'ESCAPE'
+            elif key == '\x1b[A':
+                key = 'UP'
+            elif key == '\x1b[B':
+                key = 'DOWN'
+            elif key == '\x1b[C':
+                key = 'RIGHT'
+            elif key == '\x1b[D':
+                key = 'LEFT'
+            elif key == '\x1b[3~':
+                key = 'DELETE'
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return key
 
-def handle_command_mode(editor, key):
-    pass
+
 def handle_visual_mode(editor, key):
     pass
 
@@ -43,9 +54,9 @@ def handle_insert_mode(editor, key):
 def handle_normal_mode(editor, key):
     if key == 'i':
         editor.mode = "insert"
-    if key == "q":
-        exit_enviroment()
-        sys.exit()
+    # if key == "q":
+    #     exit_enviroment()
+    #     sys.exit()
     if key == "ENTER":
         editor.mode = "navigation"
     if key == "i":
@@ -58,6 +69,18 @@ def handle_normal_mode(editor, key):
         editor.mode = "navigation"
     if key == "h":
         editor.mode = "navigation"
+    if key == ":":
+        editor.mode = "command"
+
+    if key == "d":
+        global vbuffer
+        if vbuffer == "":
+            vbuffer = "d"
+            return 
+        
+        if vbuffer == "d":
+            editor.delete_line()
+            vbuffer = ""
 
 def handle_navigation_mode(editor, key):
     if key == "h":
@@ -68,11 +91,12 @@ def handle_navigation_mode(editor, key):
         editor.mode = "normal"
 
 
+
 def main():
     editor = EditorController()
     enter_enviroment()
     while True:
-        render_editor(editor) 
+        editor.render()
         key = get_key()
         if editor.mode == "normal":
             handle_normal_mode(editor, key)
@@ -82,6 +106,9 @@ def main():
             continue
         if editor.mode == "navigation":
             handle_navigation_mode(editor, key)
+            continue
+        if editor.mode == "command":
+            handle_command_mode(editor, key)
             continue
 
 if __name__ == '__main__':
