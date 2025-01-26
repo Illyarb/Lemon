@@ -11,8 +11,15 @@ class Expression:
 
     def __str__(self):
         return str(self.value)
+
     def set_value(self, value):
         self.value = value
+
+    def focus(self):
+        self.isFocused = True
+
+    def unfocus(self):
+        self.isFocused = False
 
 class Atom(Expression):
     def __init__(self,value,  x = 0 , y =0, cursor_x=0, cursor_y=0,start_at_zero = True):
@@ -24,6 +31,7 @@ class Atom(Expression):
         self.width = len(value)
         self.start_at_zero = start_at_zero
         self.height = 1
+        self.isFocused = False
 
     def replace(self, fr, to):
         return self.value.replace(fr, to)
@@ -97,10 +105,13 @@ class Atom(Expression):
         return self
     
     def render(self):
-        putstr(self.get_cursor_string())
+        if self.isFocused:
+            putstr(self.get_cursor_string())
+        else:
+            putstr(self.value)
         
 
-class Matrix:
+class Matrix(Expression):
     def __init__(self, rows, cols, values, cursor_x=0, cursor_y=0):
         self.rows = rows
         self.cols = cols
@@ -156,40 +167,52 @@ class Matrix:
     def get_widths(self):
         return ""
 
+    def get_row_width(self, n):
+        _width = 0
+        row = self.values[n]
+        for val in row:
+            _width += len(val)
+        return _width
+    
+    def get_highest_row_width(self):
+        _width = 0
+        for row in self.values:
+            for val in row:
+                _width += len(val)
+        return _width
+
     def render(self):
-        # #render the left side of the bracket
-        # putstr("┌")
-        # for i in range(self.cols):
-        #     putstr("│")
-        #     move_cursor_down(1)
-        # putstr("└")
-        putstr("┌" + " " * (self.width-1) + "┐")
+        putstr("┌" + " " * (self.get_highest_row_width() + self.width) + "┐") 
         move_cursor_down(1)
         for row in self.values:
             putstr("│ ")
             for val in row:
                 putstr(val + " ") 
-            putstr("│ ")
+            putstr("│")
             move_cursor_down(1)
-            move_cursor_left(self.width)
+            move_cursor_left(self.get_highest_row_width())
+        move_cursor_down(2)
         putstr("└" + " " * (self.width-1) + "┘")
 
 
 
 
 
-class Summation:
-    def __init__(self, lower, upper,summand,height=2,width=2):
+class Summation(Expression):
+    def __init__(self, lower, upper,summand,height=3,width=2):
         self.lower = lower
         self.upper = upper
         self.summand = summand
         self.cursor_state = "summand"
         self.height = height
         self.width = width
+        self.isFocused = False
 
     def render(self):
         clear_images()
+        move_cursor_right(1)
         putstr(self.upper)
+        move_cursor_left(1)
         display_image(sum_image, 2,2)
         move_cursor_down(2)
         move_cursor_right(4)

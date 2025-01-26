@@ -4,6 +4,7 @@ from commands import *
 import sys
 import tty
 import termios
+from tui import *
 
 vbuffer = ""
 def get_key():
